@@ -1,0 +1,16 @@
+{
+    "C_Cpp.default.compileCommands": "",
+    "C_Cpp.default.configurationProvider": "",
+    "C_Cpp.debugShortcut": false,
+    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.intelliSenseEngine": "default",
+    "code-runner.ignoreSelection": true,
+    "code-runner.runInTerminal": true,
+    "code-runner.executorMap": {
+        "c": "powershell -NoProfile -ExecutionPolicy Bypass -File \"$workspaceRoot/.vscode/check-project.ps1\" -WorkspaceRoot \"$workspaceRoot\"",
+        "cpp": "powershell -NoProfile -ExecutionPolicy Bypass -File \"$workspaceRoot/.vscode/check-project.ps1\" -WorkspaceRoot \"$workspaceRoot\""
+    },
+    "files.associations": {
+        "*.h": "c"
+    }
+}
