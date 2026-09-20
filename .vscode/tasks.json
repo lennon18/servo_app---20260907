@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "STM32: 检查全部代码",
+            "label": "STM32: Build (GCC)",
             "type": "shell",
             "command": "powershell",
             "args": [
@@ -10,7 +10,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                "${workspaceFolder}/.vscode/check-project.ps1",
+                "${workspaceFolder}/.vscode/build-gcc.ps1",
                 "-WorkspaceRoot",
                 "${workspaceFolder}"
             ],
@@ -23,8 +23,70 @@
                 "reveal": "always",
                 "panel": "dedicated",
                 "clear": true
-            },
-            "detail": "检查 IAR 工程清单中的全部 C 源文件，不烧录程序。"
+            }
+        },
+        {
+            "label": "STM32: Test ST-Link Connection",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/.vscode/flash-stlink.ps1",
+                "-WorkspaceRoot",
+                "${workspaceFolder}",
+                "-ProbeOnly"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            }
+        },
+        {
+            "label": "STM32: Start OpenOCD",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/.vscode/start-openocd.ps1"
+            ],
+            "dependsOn": "STM32: Build (GCC)",
+            "dependsOrder": "sequence",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            }
+        },
+        {
+            "label": "STM32: Flash and Run (ST-Link)",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/.vscode/flash-stlink.ps1",
+                "-WorkspaceRoot",
+                "${workspaceFolder}"
+            ],
+            "dependsOn": "STM32: Build (GCC)",
+            "dependsOrder": "sequence",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            }
         }
     ]
 }

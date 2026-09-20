@@ -313,7 +313,7 @@ void SystemInit (void)
   #if RAM_DEBUG
 	SCB->VTOR = 0x24000000;
   #else
-	  SCB->VTOR = 0x08020000;
+	  SCB->VTOR = 0x08000000;
   #endif
 
 #endif /*DUAL_CORE && CORE_CM4*/

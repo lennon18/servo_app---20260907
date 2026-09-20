@@ -19,19 +19,22 @@
 #define UART7_ENABLE
 #define UART8_ENABLE
 
+#define BAUDRATE_115200          (115200U)
 #define BAUDRATE_230400          (230400U)
 #define BAUDRATE_460800          (460800U)
 #define BAUDRATE_921600          (921600U)
 #define BAUDRATE_1500000         (1500000U)
 
-#define UART1_DMA_RX_LEN (255U)
-#define UART2_DMA_RX_LEN (255U)
-#define UART3_DMA_RX_LEN (255U)
-#define UART4_DMA_RX_LEN (255U)
-#define UART5_DMA_RX_LEN (255U)
-#define UART6_DMA_RX_LEN (255U)
-#define UART7_DMA_RX_LEN (255U)
-#define UART8_DMA_RX_LEN (255U)
+#define UART_RX_PACKET_MAX_LEN (255U)
+
+#define UART1_DMA_RX_LEN UART_RX_PACKET_MAX_LEN
+#define UART2_DMA_RX_LEN (256U)
+#define UART3_DMA_RX_LEN UART_RX_PACKET_MAX_LEN
+#define UART4_DMA_RX_LEN UART_RX_PACKET_MAX_LEN
+#define UART5_DMA_RX_LEN UART_RX_PACKET_MAX_LEN
+#define UART6_DMA_RX_LEN UART_RX_PACKET_MAX_LEN
+#define UART7_DMA_RX_LEN UART_RX_PACKET_MAX_LEN
+#define UART8_DMA_RX_LEN UART_RX_PACKET_MAX_LEN
 
 /******** RAM地址分配 ----------------------------------------*/
 #define ADDR_UART1_TX         (0x3001F000U)    //发送buffer
@@ -54,7 +57,7 @@
 #pragma pack(1)
 typedef struct
 {
-	__IO uint8_t buffer[127];
+	__IO uint8_t buffer[UART_RX_PACKET_MAX_LEN];
 	__IO uint8_t buffer_length;
 	__IO uint8_t interrupt_flag;
 	__IO uint32_t interrupt_count;
@@ -71,7 +74,9 @@ extern uint8_t uart1_transmit(const uint8_t u8_data[], uint8_t u8_length);
 #if defined(USART2_ENABLE)
 
 extern volatile uart_receive_packet_t uart2_rx;
+extern volatile uint32_t uart2_rx_error_count;
 extern void uart2_init(uint32_t baudrate);
+extern uint8_t uart2_read_byte(uint8_t *data);
 extern uint8_t uart2_transmit(const uint8_t u8_data[], uint8_t u8_length);
 #endif
 

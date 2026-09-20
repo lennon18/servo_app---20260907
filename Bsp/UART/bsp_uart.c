@@ -120,7 +120,7 @@ static void uart1_dma_config(void)
 	DMA_InitStruct.MemoryOrM2MDstIncMode       = LL_DMA_MEMORY_INCREMENT;
 	DMA_InitStruct.PeriphOrM2MSrcDataSize      = LL_DMA_PDATAALIGN_BYTE;
 	DMA_InitStruct.MemoryOrM2MDstDataSize      = LL_DMA_MDATAALIGN_BYTE;
-	DMA_InitStruct.NbData                      = 0x000000FFU;
+	DMA_InitStruct.NbData                      = UART1_DMA_RX_LEN;
 	DMA_InitStruct.PeriphRequest               = LL_DMAMUX1_REQ_USART1_RX; // DMA请求映射：USART1_RX
 	DMA_InitStruct.Priority                    = LL_DMA_PRIORITY_HIGH;      // 优先级：高
 	DMA_InitStruct.FIFOMode                    = LL_DMA_FIFOMODE_DISABLE;
@@ -221,9 +221,6 @@ void USART1_IRQHandler(void)
     return;
   }
 
-	uart1_rx.interrupt_count++;		// 中断计数器累加，中断心跳
-	uart1_rx.interrupt_flag = 1;	// 中断标志，在主程序中查询解包，然后清除
-
 	// 循环等待：先关闭DMA发送流（Stream1），确保DMA停止工作
 	do LL_DMA_DisableStream(DMA1, LL_DMA_STREAM_1);
 	while (LL_DMA_IsEnabledStream(DMA1, LL_DMA_STREAM_1));
@@ -231,6 +228,8 @@ void USART1_IRQHandler(void)
 	u8_len = UART1_DMA_RX_LEN - LL_DMA_GetDataLength(DMA1, LL_DMA_STREAM_1);	// 判断DMA中数据数量
 	memcpy((void *)uart1_rx.buffer, (uint8_t *)ADDR_UART1_RX, u8_len);	// 将DMA接收数据拷贝到数组，主程序解包
 	uart1_rx.buffer_length = u8_len;	// 保存本次接收的数据长度，供主程序使用
+	uart1_rx.interrupt_count++;		// 中断计数器累加，中断心跳
+	uart1_rx.interrupt_flag = 1;	// 数据拷贝完成后再通知主循环
 
 	LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_1, UART1_DMA_RX_LEN);	// 重新设置 DMA 传输长度
 	LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_1, ADDR_UART1_RX);	// 重新设置 DMA 目标内存地址
@@ -246,6 +245,8 @@ void USART1_IRQHandler(void)
 #if defined(USART2_ENABLE)
 
 volatile uart_receive_packet_t uart2_rx;
+volatile uint32_t uart2_rx_error_count;
+static uint16_t uart2_rx_read_index;
 
 /**
   * @brief  USART2 GPIO引脚初始化配置
@@ -308,7 +309,7 @@ static void uart2_config(uint32_t baudrate)
 
 	NVIC_SetPriority(USART2_IRQn, (6UL << 1) + 1UL);				// USART2接收中断优先级
 	NVIC_EnableIRQ(USART2_IRQn);					// 使能USART2接收中断	
-	LL_USART_EnableIT_IDLE(USART2);					// 使能串口空闲中断（用于不定长数据接收）	
+	LL_USART_DisableIT_IDLE(USART2);				// 连续高速数据由循环 DMA 轮询读取
   LL_USART_EnableIT_ERROR(USART2);   // 使能错误中断（EIE=1），增强接收鲁棒性
 	LL_USART_Enable(USART2);						// 使能USART2外设
   USART2->ICR = 0x123B3F;       // 请所有中断标志，本项目中只开了idle中断
@@ -357,12 +358,12 @@ static void uart2_dma_config(void)
 	DMA_InitStruct.PeriphOrM2MSrcAddress       = (uint32_t)&USART2->RDR;  // 外设地址：USART2接收数据寄存器
 	DMA_InitStruct.MemoryOrM2MDstAddress       = ADDR_UART2_RX;           // 内存地址：接收缓冲区
 	DMA_InitStruct.Direction                   = LL_DMA_DIRECTION_PERIPH_TO_MEMORY;
-	DMA_InitStruct.Mode                        = LL_DMA_MODE_NORMAL;
+	DMA_InitStruct.Mode                        = LL_DMA_MODE_CIRCULAR;
 	DMA_InitStruct.PeriphOrM2MSrcIncMode       = LL_DMA_PERIPH_NOINCREMENT;
 	DMA_InitStruct.MemoryOrM2MDstIncMode       = LL_DMA_MEMORY_INCREMENT;
 	DMA_InitStruct.PeriphOrM2MSrcDataSize      = LL_DMA_PDATAALIGN_BYTE;
 	DMA_InitStruct.MemoryOrM2MDstDataSize      = LL_DMA_MDATAALIGN_BYTE;
-	DMA_InitStruct.NbData                      = 0x000000FFU;
+	DMA_InitStruct.NbData                      = UART2_DMA_RX_LEN;
 	DMA_InitStruct.PeriphRequest               = LL_DMAMUX1_REQ_USART2_RX; // DMA请求映射：USART2_RX
 	DMA_InitStruct.Priority                    = LL_DMA_PRIORITY_HIGH;      // 优先级：高
 	DMA_InitStruct.FIFOMode                    = LL_DMA_FIFOMODE_DISABLE;
@@ -395,12 +396,41 @@ static void uart2_dma_config(void)
   */
 void uart2_init(uint32_t baudrate)
 {
+	if (LL_USART_IsEnabled(USART2) != 0U)
+	{
+		LL_USART_Disable(USART2);
+	}
+	uart2_rx_read_index = 0U;
+	uart2_rx_error_count = 0U;
+	memset((void *)ADDR_UART2_RX, 0, UART2_DMA_RX_LEN);
 	uart2_gpio_config();   // 初始化串口GPIO
 	uart2_dma_config();    // 初始化串口DMA
 	uart2_config(baudrate);        // 初始化串口参数
 	uart2_rx.interrupt_count = 0;	//初始化中断计数器
 	uart2_rx.buffer_length = 0;		//初始化接收长度
 	uart2_rx.interrupt_flag = 0;	//初始化中断标志
+}
+
+uint8_t uart2_read_byte(uint8_t *data)
+{
+	uint16_t write_index;
+
+	if (data == NULL)
+	{
+		return 0U;
+	}
+
+	write_index = (uint16_t)(UART2_DMA_RX_LEN -
+	                         LL_DMA_GetDataLength(DMA1, LL_DMA_STREAM_3));
+	if (uart2_rx_read_index == write_index)
+	{
+		return 0U;
+	}
+
+	*data = *(volatile uint8_t *)(ADDR_UART2_RX + uart2_rx_read_index);
+	uart2_rx_read_index = (uint16_t)((uart2_rx_read_index + 1U) &
+	                                 (UART2_DMA_RX_LEN - 1U));
+	return 1U;
 }
 
 /**
@@ -435,53 +465,20 @@ uint8_t uart2_transmit(const uint8_t u8_data[], uint8_t u8_length)
 }
 
 /**
- * @brief  USART2 中断服务函数（空闲中断 + DMA 不定长接收）
- * @note   串口空闲中断触发 → 表示一帧数据接收完成
- *         关闭DMA → 读取数据长度 → 拷贝数据 → 重启DMA
+ * @brief  USART2 error interrupt handler
+ * @note   RX data remains in the circular DMA buffer and is polled by main.
  */
 void USART2_IRQHandler(void)
 {
-	__IO uint8_t u8_len;
-
-  if (LL_USART_IsActiveFlag_ORE(USART2) || LL_USART_IsActiveFlag_FE(USART2)
-      || LL_USART_IsActiveFlag_NE(USART2))
-  {
-    LL_USART_ClearFlag_ORE(USART2);
-    LL_USART_ClearFlag_FE(USART2);
-    LL_USART_ClearFlag_NE(USART2);
-    return;
-  }
-
-  if (LL_USART_IsActiveFlag_IDLE(USART2))
-  {
-    //LL_USART_ClearFlag_IDLE(USART2);            // 清除空闲中断
-    USART2->ICR = 0x123B3F;       // 请所有中断标志，本项目中只开了idle中断
-  }
-  else
-  {
-    USART2->ICR = 0x123B3F;       // 请所有中断标志，本项目中只开了idle中断
-    return;
-  }
-
-	uart2_rx.interrupt_count++;		// 中断计数器累加，中断心跳
-	uart2_rx.interrupt_flag = 1;	// 中断标志，在主程序中查询解包，然后清除
-
-	// 循环等待：先关闭DMA发送流（Stream3），确保DMA停止工作
-	do LL_DMA_DisableStream(DMA1, LL_DMA_STREAM_3);
-	while (LL_DMA_IsEnabledStream(DMA1, LL_DMA_STREAM_3));
-
-	u8_len = UART2_DMA_RX_LEN - LL_DMA_GetDataLength(DMA1, LL_DMA_STREAM_3);	// 判断DMA中数据数量
-	memcpy((void *)uart2_rx.buffer, (uint8_t *)ADDR_UART2_RX, u8_len);	// 将DMA接收数据拷贝到数组，主程序解包
-	uart2_rx.buffer_length = u8_len;	// 保存本次接收的数据长度，供主程序使用
-
-	LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_3, UART2_DMA_RX_LEN);	// 重新设置 DMA 传输长度
-	LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_3, ADDR_UART2_RX);	// 重新设置 DMA 目标内存地址
-	// 清除DMA1 Stream3所有中断标志位
-	// （半传输、传输完成、传输错误、直接模式错误、FIFO 错误等）
-  WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CHTIF3 | DMA_LIFCR_CTCIF3 |
-                       DMA_LIFCR_CTEIF3 | DMA_LIFCR_CDMEIF3 |
-                       DMA_LIFCR_CFEIF3);
-	LL_DMA_EnableStream(DMA1, LL_DMA_STREAM_3);			// 重新使能DMA接收流，启动DMA接收
+	if (LL_USART_IsActiveFlag_ORE(USART2) ||
+	    LL_USART_IsActiveFlag_FE(USART2) ||
+	    LL_USART_IsActiveFlag_NE(USART2))
+	{
+		++uart2_rx_error_count;
+		LL_USART_ClearFlag_ORE(USART2);
+		LL_USART_ClearFlag_FE(USART2);
+		LL_USART_ClearFlag_NE(USART2);
+	}
 }
 #endif
 
@@ -1955,4 +1952,3 @@ void UART8_IRQHandler(void)
 	LL_DMA_EnableStream(DMA2, LL_DMA_STREAM_7);			// 重新使能DMA接收流，启动DMA接收
 }
 #endif
-

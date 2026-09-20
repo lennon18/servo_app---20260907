@@ -3,14 +3,16 @@
     "C_Cpp.default.configurationProvider": "",
     "C_Cpp.debugShortcut": false,
     "C_Cpp.errorSquiggles": "enabled",
-    "C_Cpp.intelliSenseEngine": "default",
+    "C_Cpp.intelliSenseEngine": "Disabled",
     "code-runner.ignoreSelection": true,
     "code-runner.runInTerminal": true,
+    "cortex-debug.liveWatchRefreshRate": 1000,
     "code-runner.executorMap": {
         "c": "powershell -NoProfile -ExecutionPolicy Bypass -File \"$workspaceRoot/.vscode/check-project.ps1\" -WorkspaceRoot \"$workspaceRoot\"",
         "cpp": "powershell -NoProfile -ExecutionPolicy Bypass -File \"$workspaceRoot/.vscode/check-project.ps1\" -WorkspaceRoot \"$workspaceRoot\""
     },
     "files.associations": {
         "*.h": "c"
-    }
+    },
+    "cortex-debug.variableUseNaturalFormat": true
 }

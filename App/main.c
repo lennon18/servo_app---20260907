@@ -17,6 +17,8 @@
 
 #include "bsp_led.h"
 #include "bsp_uart.h"
+#include "boot_jump.h"
+#include "gsa200.h"
 #include "main.h"
 
 __IO uint32_t u32_timer_1ms;
@@ -65,10 +67,13 @@ int main(void)
 
 	LED_Init();
 
-  uart2_init(BAUDRATE_921600);
+  uart2_init(BAUDRATE_460800);
+  gsa200_init();
   uart3_init(BAUDRATE_921600);
   uart4_init(BAUDRATE_921600);
   uart7_init(BAUDRATE_921600);
+
+  boot_init();               // 串口烧录：打开 UART1（必须放在 NVIC_SetPriorityGrouping 之前）
 
 	NVIC_SetPriorityGrouping(4);
 	/* Set systick to 1ms */
@@ -78,6 +83,9 @@ int main(void)
 	/* Infinite loop */
 	while (1)
 	{
+		gsa200_poll(u32_timer_1ms);
+		boot_poll();
+
 		// led 显示
 		if (u16_led_count < 1000)
 		{
@@ -97,38 +105,6 @@ int main(void)
 		if (flag_timer_1ms)
 		{
 			flag_timer_1ms = 0;
-
-			send_buffer[0] = 0xAA;
-
-			send_buffer[1] = ((send_data[0] & 0xFF00) >> 8) & 0xFF;
-			send_buffer[2] = send_data[0] & 0x00FF;
-			send_buffer[3] = ((send_data[1] & 0xFF00) >> 8) & 0xFF;
-			send_buffer[4] = send_data[1] & 0x00FF;
-			send_buffer[5] = ((send_data[2] & 0xFF00) >> 8) & 0xFF;
-			send_buffer[6] = send_data[2] & 0x00FF;
-
-			send_buffer[7] = ((send_data[3] & 0xFF00) >> 8) & 0xFF;
-			send_buffer[8] = send_data[3] & 0x00FF;
-			send_buffer[9] = ((send_data[4] & 0xFF00) >> 8) & 0xFF;
-			send_buffer[10] = send_data[4] & 0x00FF;
-			send_buffer[11] = ((send_data[5] & 0xFF00) >> 8) & 0xFF;
-			send_buffer[12] = send_data[5] & 0x00FF;
-
-			send_buffer[13] = ((send_data[6] & 0xFF00) >> 8) & 0xFF;
-			send_buffer[14] = send_data[6] & 0x00FF;
-			send_buffer[15] = ((send_data[7] & 0xFF00) >> 8) & 0xFF;
-			send_buffer[16] = send_data[7] & 0x00FF;
-			send_buffer[17] = ((send_data[8] & 0xFF00) >> 8) & 0xFF;
-			send_buffer[18] = send_data[8] & 0x00FF;
-
-			uint16_t ttemp = 0;
-			uint16_t uwIndex = 0;
-			for(uwIndex=0;uwIndex<19;uwIndex++)
-			{
-				ttemp = ttemp + send_buffer[uwIndex];
-			}
-			send_buffer[19] = ttemp & 0x00FF;
-			uart2_transmit((const uint8_t *)send_buffer,20);
 			u32_elapsed_time = (SysTick->LOAD - SysTick->VAL) / 480;
 		}
 	}
@@ -375,5 +351,3 @@ void SysTick_Handler(void)
 	u16_led_count++;        // led计数器
 	flag_timer_1ms = 1;     // 1ms定时标志，在程序需要定时的地方使用
 }
-
-

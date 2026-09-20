@@ -1,48 +1,33 @@
 {
-    // ─────────────────────────────────────────────────────────────
-    // 界面是 VSCode 的（▶ / F5 / 运行和调试面板），
-    // 底层用 IAR 的 C-SPY 调试器 + ST-Link 下载。
-    // 不需要打开 IAR 的界面。
-    //
-    // 路径用绝对路径写死 —— 这样不管你 VSCode 打开的是工程根目录
-    // 还是 Project\EWARM，都能正常工作。
-    // ─────────────────────────────────────────────────────────────
     "version": "0.2.0",
     "configurations": [
+
         {
-            "name": "① 编译 + 烧录 + 运行",
-            "type": "cspy",
+            "name": "STM32: Debug (ST-Link/OpenOCD)",
+            "type": "cortex-debug",
             "request": "launch",
-            "workbenchPath": "C:\\iar\\ewarm-9.70.1",
-            "projectPath": "c:\\Users\\22191\\Desktop\\servo_app - 20260907\\Project\\EWARM\\servo_app.ewp",
-            "projectConfiguration": "stm32h743vit6",
-            "driver": "ST-LINK",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/gcc/servo_app.elf",
+            "preLaunchTask": "STM32: Start OpenOCD",
+            "servertype": "external",
+            "gdbTarget": "localhost:50000",
+            "armToolchainPath": "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin",
             "device": "STM32H743VI",
-            "program": "c:\\Users\\22191\\Desktop\\servo_app - 20260907\\Project\\EWARM\\Debug\\Exe\\servo_app.elf",
-            "buildBeforeDebugging": "AbortOnFailure",
-            "stopOnSymbol": false,
-            "leaveTargetRunning": true
+            "preLaunchCommands": [
+                "set remotetimeout 30"
+            ],
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 1
+            },
+            "showDevDebugOutput": "raw"
         },
         {
-            "name": "② 编译 + 烧录 + 停在 main 调试",
-            "type": "cspy",
-            "request": "launch",
-            "workbenchPath": "C:\\iar\\ewarm-9.70.1",
-            "projectPath": "c:\\Users\\22191\\Desktop\\servo_app - 20260907\\Project\\EWARM\\servo_app.ewp",
-            "projectConfiguration": "stm32h743vit6",
-            "driver": "ST-LINK",
-            "device": "STM32H743VI",
-            "program": "c:\\Users\\22191\\Desktop\\servo_app - 20260907\\Project\\EWARM\\Debug\\Exe\\servo_app.elf",
-            "buildBeforeDebugging": "AbortOnFailure",
-            "stopOnSymbol": "main",
-            "leaveTargetRunning": false
-        },
-        {
-            "name": "STM32: 运行编译检查（不烧录）",
+            "name": "STM32: Build only",
             "type": "node-terminal",
             "request": "launch",
-            "preLaunchTask": "STM32: 检查全部代码",
-            "command": "echo STM32 code check completed.",
+            "preLaunchTask": "STM32: Build (GCC)",
+            "command": "Write-Output 'STM32 GCC build completed.'",
             "cwd": "${workspaceFolder}"
         }
     ]
