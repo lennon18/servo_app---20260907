@@ -23,12 +23,14 @@ const EXPRESSIONS = [
     ["valid_frames", "gsa200_valid_frames"],
     ["checksum_errors", "gsa200_checksum_errors"],
     ["format_errors", "gsa200_format_errors"],
-    ["dropped_frames", "gsa200_dropped_frames"]
+    ["dropped_frames", "gsa200_dropped_frames"],
+    ["data_valid", "gsa200_data_valid"],
+    ["active_baudrate", "gsa200_active_baudrate"]
 ];
 
 async function seedLiveWatch() {
     const folder = vscode.workspace.workspaceFolders?.[0];
-    if (!folder || !folder.uri.fsPath.toLowerCase().endsWith("servo_app - 20260907")) {
+    if (!folder || !folder.uri.fsPath.toLowerCase().includes("servo_app")) {
         return;
     }
 
