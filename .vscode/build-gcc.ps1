@@ -6,8 +6,8 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $toolchainCandidates = @(
-    'D:\software\arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi\bin',
-    'C:\Program Files (x86)\Arm GNU Toolchain arm-none-eabi\14.2 rel1\bin'
+    'C:\Program Files (x86)\Arm GNU Toolchain arm-none-eabi\14.2 rel1\bin',
+    'C:\Users\22191\.platformio\packages\toolchain-gccarmnoneeabi\bin'
 )
 $toolchain = $toolchainCandidates | Where-Object { (Test-Path $_) -and (Test-Path (Join-Path $_ 'arm-none-eabi-gcc.exe')) } | Select-Object -First 1
 if (-not $toolchain) {

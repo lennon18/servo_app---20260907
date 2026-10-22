@@ -245,9 +245,16 @@ void USART1_IRQHandler(void)
 
 #if defined(USART2_ENABLE)
 
+/* Keep the CPU read pointer this many bytes behind the DMA write pointer.
+ * NDTR can lead the visible SRAM writes by a few bytes; without this guard the
+ * parser can read the previous lap's bytes at the head of a frame while the DMA
+ * is still writing the current frame. 64 bytes is two full 32-byte frames. */
+#define UART2_RX_GUARD_BYTES (64U)
+
 volatile uart_receive_packet_t uart2_rx;
 volatile uint32_t uart2_rx_error_count;
 static uint16_t uart2_rx_read_index;
+static uint8_t uart2_rx_primed;
 
 /**
   * @brief  USART2 GPIO引脚初始化配置
@@ -303,7 +310,7 @@ static void uart2_config(uint32_t baudrate)
 
 	LL_USART_EnableDirectionTx(USART2);				// 使能USART2发送功能
 	LL_USART_EnableDirectionRx(USART2);				// 使能USART2接收功能
-	LL_USART_DisableOverrunDetect(USART2);			// 关闭溢出检测（避免数据丢失时串口卡死）
+	LL_USART_EnableOverrunDetect(USART2);			// 保留硬件溢出标志，便于诊断高速接收丢字节
 	LL_USART_EnableDMADeactOnRxErr(USART2);			// 接收错误时不关闭DMA（保证DMA持续运行）	
 	LL_USART_EnableDMAReq_TX(USART2);				// 使能USART2 TX DMA请求
 	LL_USART_EnableDMAReq_RX(USART2);				// 使能USART2 RX DMA请求
@@ -357,7 +364,7 @@ static void uart2_dma_config(void)
 	/* 配置DMA接收通道（USART2_RX）*/
 	/* 接收方向：外设 -> 内存 */
 	DMA_InitStruct.PeriphOrM2MSrcAddress       = (uint32_t)&USART2->RDR;  // 外设地址：USART2接收数据寄存器
-	DMA_InitStruct.MemoryOrM2MDstAddress       = ADDR_UART2_RX;           // 内存地址：接收缓冲区
+	DMA_InitStruct.MemoryOrM2MDstAddress       = ADDR_UART2_RX;           // 内存地址：USART2接收缓冲区
 	DMA_InitStruct.Direction                   = LL_DMA_DIRECTION_PERIPH_TO_MEMORY;
 	DMA_InitStruct.Mode                        = LL_DMA_MODE_CIRCULAR;
 	DMA_InitStruct.PeriphOrM2MSrcIncMode       = LL_DMA_PERIPH_NOINCREMENT;
@@ -402,6 +409,7 @@ void uart2_init(uint32_t baudrate)
 		LL_USART_Disable(USART2);
 	}
 	uart2_rx_read_index = 0U;
+	uart2_rx_primed = 0U;
 	uart2_rx_error_count = 0U;
 	memset((void *)ADDR_UART2_RX, 0, UART2_DMA_RX_LEN);
 	uart2_gpio_config();   // 初始化串口GPIO
@@ -415,6 +423,7 @@ void uart2_init(uint32_t baudrate)
 uint8_t uart2_read_byte(uint8_t *data)
 {
 	uint16_t write_index;
+	uint16_t safe_index;
 
 	if (data == NULL)
 	{
@@ -423,7 +432,21 @@ uint8_t uart2_read_byte(uint8_t *data)
 
 	write_index = (uint16_t)(UART2_DMA_RX_LEN -
 	                         LL_DMA_GetDataLength(DMA1, LL_DMA_STREAM_3));
-	if (uart2_rx_read_index == write_index)
+
+	/* Wait until the guard window has been filled once after (re)initialization. */
+	if (uart2_rx_primed == 0U)
+	{
+		if (write_index < UART2_RX_GUARD_BYTES)
+		{
+			return 0U;
+		}
+		uart2_rx_primed = 1U;
+	}
+
+	/* Only expose bytes that are at least UART2_RX_GUARD_BYTES old. */
+	safe_index = (uint16_t)((write_index - UART2_RX_GUARD_BYTES) &
+	                        (UART2_DMA_RX_LEN - 1U));
+	if (uart2_rx_read_index == safe_index)
 	{
 		return 0U;
 	}

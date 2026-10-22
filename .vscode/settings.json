@@ -8,6 +8,8 @@
     "code-runner.ignoreSelection": true,
     "code-runner.runInTerminal": true,
     "cortex-debug.liveWatchRefreshRate": 300,
+    "cortex-debug.gdbPath": "C:\\Program Files (x86)\\Arm GNU Toolchain arm-none-eabi\\14.2 rel1\\bin\\arm-none-eabi-gdb.exe",
+    "cortex-debug.armToolchainPath": "C:\\Program Files (x86)\\Arm GNU Toolchain arm-none-eabi\\14.2 rel1\\bin",
     "code-runner.executorMap": {
         "c": "powershell -NoProfile -ExecutionPolicy Bypass -File \"$workspaceRoot/.vscode/check-project.ps1\" -WorkspaceRoot \"$workspaceRoot\"",
         "cpp": "powershell -NoProfile -ExecutionPolicy Bypass -File \"$workspaceRoot/.vscode/check-project.ps1\" -WorkspaceRoot \"$workspaceRoot\""

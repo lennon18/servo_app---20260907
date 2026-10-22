@@ -16,9 +16,10 @@
             "preLaunchTask": "STM32: Build (GCC)",
             "executable": "${workspaceFolder}/build/gcc/servo_app.elf",
             "servertype": "stlink",
-            "serverpath": "C:/Users/chenx/AppData/Local/stm32cube/bundles/stlink-gdbserver/7.14.0+st.2/bin/ST-LINK_gdbserver.exe",
-            "stm32cubeprogrammer": "C:/Users/chenx/AppData/Local/stm32cube/bundles/programmer/2.23.0/bin",
-            "armToolchainPath": "D:/software/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin",
+            "serverpath": "C:/Users/22191/AppData/Local/stm32cube/bundles/stlink-gdbserver/7.14.0+st.2/bin/ST-LINK_gdbserver.exe",
+            "stm32cubeprogrammer": "C:/Users/22191/AppData/Local/stm32cube/bundles/programmer/2.23.0/bin",
+            "armToolchainPath": "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin",
+            "gdbPath": "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/arm-none-eabi-gdb.exe",
             "device": "STM32H743VI",
             "interface": "swd",
             "serialNumber": "22025702234D4E504E413836",
@@ -34,6 +35,32 @@
             "showDevDebugOutput": "raw"
         },
         {
+            "name": "STM32: Debug (OpenOCD)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/gcc/servo_app.elf",
+            "servertype": "openocd",
+            "serverpath": "C:/Users/22191/.platformio/packages/tool-openocd/bin/openocd.exe",
+            "searchDir": [
+                "C:/Users/22191/.platformio/packages/tool-openocd/openocd/scripts"
+            ],
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32h7x.cfg"
+            ],
+            "serverArgs": [
+                "-c",
+                "adapter speed 1000"
+            ],
+            "device": "STM32H743VI",
+            "runToEntryPoint": "main",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 10
+            }
+        },
+        {
             "name": "STM32: Build only",
             "type": "node-terminal",
             "request": "launch",
@@ -45,11 +72,11 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "D:/STM32_project/gddc/servo_app_v4.0/servo_app/.pio/build/stm32h743vit6/firmware.elf",
+            "executable": "C:/Users/22191/Desktop/servo_app_v4.0/.pio/build/stm32h743vit6/firmware.elf",
             "projectEnvName": "stm32h743vit6",
-            "toolchainBinDir": "C:/Users/chenx/.platformio/packages/toolchain-gccarmnoneeabi/bin",
+            "toolchainBinDir": "C:/Users/22191/.platformio/packages/toolchain-gccarmnoneeabi/bin",
             "internalConsoleOptions": "openOnSessionStart",
-            "svdPath": "C:/Users/chenx/.platformio/platforms/ststm32/misc/svd/STM32H743.svd",
+            "svdPath": "C:/Users/22191/.platformio/platforms/ststm32/misc/svd/STM32H743.svd",
             "preLaunchTask": {
                 "type": "PlatformIO",
                 "task": "Pre-Debug"
@@ -59,21 +86,21 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "D:/STM32_project/gddc/servo_app_v4.0/servo_app/.pio/build/stm32h743vit6/firmware.elf",
+            "executable": "C:/Users/22191/Desktop/servo_app_v4.0/.pio/build/stm32h743vit6/firmware.elf",
             "projectEnvName": "stm32h743vit6",
-            "toolchainBinDir": "C:/Users/chenx/.platformio/packages/toolchain-gccarmnoneeabi/bin",
+            "toolchainBinDir": "C:/Users/22191/.platformio/packages/toolchain-gccarmnoneeabi/bin",
             "internalConsoleOptions": "openOnSessionStart",
-            "svdPath": "C:/Users/chenx/.platformio/platforms/ststm32/misc/svd/STM32H743.svd"
+            "svdPath": "C:/Users/22191/.platformio/platforms/ststm32/misc/svd/STM32H743.svd"
         },
         {
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (without uploading)",
-            "executable": "D:/STM32_project/gddc/servo_app_v4.0/servo_app/.pio/build/stm32h743vit6/firmware.elf",
+            "executable": "C:/Users/22191/Desktop/servo_app_v4.0/.pio/build/stm32h743vit6/firmware.elf",
             "projectEnvName": "stm32h743vit6",
-            "toolchainBinDir": "C:/Users/chenx/.platformio/packages/toolchain-gccarmnoneeabi/bin",
+            "toolchainBinDir": "C:/Users/22191/.platformio/packages/toolchain-gccarmnoneeabi/bin",
             "internalConsoleOptions": "openOnSessionStart",
-            "svdPath": "C:/Users/chenx/.platformio/platforms/ststm32/misc/svd/STM32H743.svd",
+            "svdPath": "C:/Users/22191/.platformio/platforms/ststm32/misc/svd/STM32H743.svd",
             "loadMode": "manual"
         }
     ]

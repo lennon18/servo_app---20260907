@@ -28,7 +28,7 @@
 #define UART_RX_PACKET_MAX_LEN (255U)
 
 #define UART1_DMA_RX_LEN UART_RX_PACKET_MAX_LEN
-#define UART2_DMA_RX_LEN (256U)
+#define UART2_DMA_RX_LEN (4096U)
 #define UART3_DMA_RX_LEN UART_RX_PACKET_MAX_LEN
 #define UART4_DMA_RX_LEN UART_RX_PACKET_MAX_LEN
 #define UART5_DMA_RX_LEN UART_RX_PACKET_MAX_LEN
@@ -40,7 +40,7 @@
 #define ADDR_UART1_TX         (0x3001F000U)    //发送buffer
 #define ADDR_UART1_RX         (0x3001F100U)    //接收buffer
 #define ADDR_UART2_TX         (0x3001F200U)    //发送buffer
-#define ADDR_UART2_RX         (0x3001F300U)    //接收buffer
+#define ADDR_UART2_RX         (0x30020000U)    // USART2高速接收buffer（SRAM2）
 #define ADDR_UART3_TX         (0x3001F400U)    //发送buffer
 #define ADDR_UART3_RX         (0x3001F500U)    //接收buffer
 #define ADDR_UART4_TX         (0x3001F600U)    //发送buffer

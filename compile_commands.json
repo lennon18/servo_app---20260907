@@ -65,38 +65,6 @@
   },
   {
     "directory": "D:/STM32_project/gddc/servo_app - 20260907",
-    "file": "D:/STM32_project/gddc/servo_app - 20260907/App/boot_jump.c",
-    "arguments": [
-      "D:/software/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc.exe",
-      "-std=gnu11",
-      "-mcpu=cortex-m7",
-      "-mthumb",
-      "-mfpu=fpv5-d16",
-      "-mfloat-abi=hard",
-      "-O0",
-      "-g3",
-      "-DSTM32H743xx",
-      "-DUSE_FULL_LL_DRIVER",
-      "-DRAM_DEBUG=0",
-      "-ID:/STM32_project/gddc/servo_app - 20260907/App",
-      "-ID:/STM32_project/gddc/servo_app - 20260907/Bsp",
-      "-ID:/STM32_project/gddc/servo_app - 20260907/Bsp/LED",
-      "-ID:/STM32_project/gddc/servo_app - 20260907/Bsp/UART",
-      "-ID:/STM32_project/gddc/servo_app - 20260907/CMSIS/Inc",
-      "-ID:/STM32_project/gddc/servo_app - 20260907/Driver/Inc",
-      "-ID:/STM32_project/gddc/servo_app - 20260907/Driver/Inc/Legacy",
-      "-ID:/STM32_project/gddc/servo_app - 20260907/STM32H7xx_Device/Inc",
-      "-isystem",
-      "D:/software/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi/arm-none-eabi/include",
-      "-isystem",
-      "D:/software/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi/lib/gcc/arm-none-eabi\\14.2.1\\include",
-      "-isystem",
-      "D:/software/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi/lib/gcc/arm-none-eabi\\14.2.1\\include-fixed",
-      "D:/STM32_project/gddc/servo_app - 20260907/App/boot_jump.c"
-    ]
-  },
-  {
-    "directory": "D:/STM32_project/gddc/servo_app - 20260907",
     "file": "D:/STM32_project/gddc/servo_app - 20260907/App/gsa200.c",
     "arguments": [
       "D:/software/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc.exe",
@@ -125,6 +93,38 @@
       "-isystem",
       "D:/software/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi/lib/gcc/arm-none-eabi\\14.2.1\\include-fixed",
       "D:/STM32_project/gddc/servo_app - 20260907/App/gsa200.c"
+    ]
+  },
+  {
+    "directory": "D:/STM32_project/gddc/servo_app - 20260907",
+    "file": "D:/STM32_project/gddc/servo_app - 20260907/App/boot_jump.c",
+    "arguments": [
+      "D:/software/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc.exe",
+      "-std=gnu11",
+      "-mcpu=cortex-m7",
+      "-mthumb",
+      "-mfpu=fpv5-d16",
+      "-mfloat-abi=hard",
+      "-O0",
+      "-g3",
+      "-DSTM32H743xx",
+      "-DUSE_FULL_LL_DRIVER",
+      "-DRAM_DEBUG=0",
+      "-ID:/STM32_project/gddc/servo_app - 20260907/App",
+      "-ID:/STM32_project/gddc/servo_app - 20260907/Bsp",
+      "-ID:/STM32_project/gddc/servo_app - 20260907/Bsp/LED",
+      "-ID:/STM32_project/gddc/servo_app - 20260907/Bsp/UART",
+      "-ID:/STM32_project/gddc/servo_app - 20260907/CMSIS/Inc",
+      "-ID:/STM32_project/gddc/servo_app - 20260907/Driver/Inc",
+      "-ID:/STM32_project/gddc/servo_app - 20260907/Driver/Inc/Legacy",
+      "-ID:/STM32_project/gddc/servo_app - 20260907/STM32H7xx_Device/Inc",
+      "-isystem",
+      "D:/software/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi/arm-none-eabi/include",
+      "-isystem",
+      "D:/software/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi/lib/gcc/arm-none-eabi\\14.2.1\\include",
+      "-isystem",
+      "D:/software/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi/lib/gcc/arm-none-eabi\\14.2.1\\include-fixed",
+      "D:/STM32_project/gddc/servo_app - 20260907/App/boot_jump.c"
     ]
   },
   {

@@ -23,6 +23,11 @@ void pcu_position_init(void);
 void pcu_position_poll(uint32_t now_ms);
 uint8_t pcu_position_start_relative(float delta_deg);
 void pcu_position_stop(void);
+/* Remember the current position as the software return point. */
+uint8_t pcu_position_set_initial(void);
+/* Start a relative move back to the remembered return point. */
+uint8_t pcu_position_return_initial(void);
+uint8_t pcu_position_initial_is_set(void);
 uint8_t pcu_position_set_end_mode(pcu_position_end_mode_t mode);
 pcu_position_end_mode_t pcu_position_get_end_mode(void);
 uint8_t pcu_position_set_kp(float kp_rpm_per_deg);
@@ -35,6 +40,7 @@ uint8_t pcu_position_is_active(void);
 extern volatile int32_t pcu_position_current_mdeg;
 extern volatile int32_t pcu_position_target_mdeg;
 extern volatile int32_t pcu_position_error_mdeg;
+extern volatile int32_t pcu_position_initial_mdeg;
 extern volatile float pcu_position_speed_reference_rpm;
 
 #endif /* PCU_POSITION_H */

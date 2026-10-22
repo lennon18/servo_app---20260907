@@ -43,6 +43,8 @@ static void terminal_help(void)
     printf("  clear                clear PCU faults with output disabled\r\n");
     printf("  zero <raw>           start PCU automatic zeroing\r\n");
     printf("  move <deg>           move relative to current angle\r\n");
+    printf("  position set_initial  remember current position as return point\r\n");
+    printf("  position return_initial  move back to remembered position\r\n");
     printf("  position status      show position-loop state\r\n");
     printf("  position end hold|disable  set action after reaching target\r\n");
     printf("  position kp <rpm/deg> set position proportional gain\r\n");
@@ -102,13 +104,15 @@ static void terminal_status(void)
            (unsigned int)tx_frame[4], (unsigned int)tx_frame[5],
            (unsigned int)tx_frame[6], (int)tx_setpoint,
            pcu_checksum_valid(tx_frame) != 0U ? "OK" : "BAD");
-    printf("position: state=%u end=%s current_mdeg=%ld target_mdeg=%ld error_mdeg=%ld\r\n",
+    printf("position: state=%u end=%s current_mdeg=%ld target_mdeg=%ld error_mdeg=%ld initial_valid=%u initial_mdeg=%ld\r\n",
            (unsigned int)pcu_position_get_state(),
            pcu_position_get_end_mode() == PCU_POSITION_END_HOLD ?
            "hold" : "disable",
            (long)pcu_position_current_mdeg,
            (long)pcu_position_target_mdeg,
-           (long)pcu_position_error_mdeg);
+           (long)pcu_position_error_mdeg,
+           (unsigned int)pcu_position_initial_is_set(),
+           (long)pcu_position_initial_mdeg);
     printf("position p: kp=%.6f rpm/deg max_speed=%.3f rpm output=%.3f rpm\r\n",
            (double)pcu_position_get_kp(),
            (double)pcu_position_get_max_speed(),
@@ -315,6 +319,28 @@ static void terminal_execute(char *line)
     else if (strcmp(line, "position status") == 0)
     {
         terminal_status();
+    }
+    else if (strcmp(line, "position set_initial") == 0)
+    {
+        if (pcu_position_set_initial() != 0U)
+        {
+            printf("OK: current position remembered as return point\r\n");
+        }
+        else
+        {
+            printf("ERR: stop control, disable PCU output, clear faults, and ensure valid feedback first\r\n");
+        }
+    }
+    else if (strcmp(line, "position return_initial") == 0)
+    {
+        if (pcu_position_return_initial() != 0U)
+        {
+            printf("OK: return-to-initial move started\r\n");
+        }
+        else
+        {
+            printf("ERR: no valid initial point, control active, fault present, or return distance is too large\r\n");
+        }
     }
     else if (strcmp(line, "position end hold") == 0)
     {

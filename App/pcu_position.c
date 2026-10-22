@@ -22,13 +22,16 @@
 volatile int32_t pcu_position_current_mdeg;
 volatile int32_t pcu_position_target_mdeg;
 volatile int32_t pcu_position_error_mdeg;
+volatile int32_t pcu_position_initial_mdeg;
 volatile float pcu_position_speed_reference_rpm;
 
 static pcu_position_state_t position_state;
 static float current_angle_deg;
 static float target_angle_deg;
+static float initial_angle_deg;
 static float previous_wrapped_angle_deg;
 static uint8_t feedback_initialized;
+static uint8_t initial_position_valid;
 static uint32_t last_feedback_frames;
 static uint32_t last_feedback_ms;
 static uint32_t move_start_ms;
@@ -107,8 +110,10 @@ void pcu_position_init(void)
     position_state = PCU_POSITION_IDLE;
     current_angle_deg = 0.0f;
     target_angle_deg = 0.0f;
+    initial_angle_deg = 0.0f;
     previous_wrapped_angle_deg = 0.0f;
     feedback_initialized = 0U;
+    initial_position_valid = 0U;
     last_feedback_frames = 0U;
     last_feedback_ms = 0U;
     move_start_ms = 0U;
@@ -118,6 +123,7 @@ void pcu_position_init(void)
     pcu_position_current_mdeg = 0;
     pcu_position_target_mdeg = 0;
     pcu_position_error_mdeg = 0;
+    pcu_position_initial_mdeg = 0;
     pcu_position_speed_reference_rpm = 0.0f;
     position_kp_rpm_per_deg = POSITION_DEFAULT_KP_RPM_PER_DEG;
     position_max_speed_rpm = POSITION_DEFAULT_MAX_SPEED_RPM;
@@ -175,6 +181,86 @@ void pcu_position_stop(void)
     position_state = PCU_POSITION_IDLE;
     settle_start_ms = 0U;
     pcu_position_speed_reference_rpm = 0.0f;
+}
+
+uint8_t pcu_position_set_initial(void)
+{
+    /* Do not change the return point while a controller could still move the
+       shaft. A fault/timeout state must be explicitly stopped first. */
+    if ((g_pcu_status.data_valid == 0U) ||
+        (feedback_initialized == 0U) ||
+        (position_state == PCU_POSITION_MOVING) ||
+        (position_state == PCU_POSITION_HOLDING) ||
+        (position_state == PCU_POSITION_FAULT) ||
+        (position_state == PCU_POSITION_TIMEOUT) ||
+        (pcu_speed_is_active() != 0U) ||
+        ((g_pcu_status.status & PCU_STATUS_ENABLED) != 0U))
+    {
+        return 0U;
+    }
+
+    initial_angle_deg = current_angle_deg;
+    initial_position_valid = 1U;
+    position_state = PCU_POSITION_IDLE;
+    target_angle_deg = current_angle_deg;
+    settle_start_ms = 0U;
+    move_start_ms = 0U;
+    last_command_ms = 0U;
+    pcu_position_speed_reference_rpm = 0.0f;
+    (void)pcu_speed_set_position_reference_rpm(0.0f);
+    position_publish(0.0f);
+    pcu_position_initial_mdeg = position_mdeg(initial_angle_deg);
+    return 1U;
+}
+
+uint8_t pcu_position_return_initial(void)
+{
+    float delta_deg;
+
+    if ((initial_position_valid == 0U) ||
+        (g_pcu_status.data_valid == 0U) ||
+        (feedback_initialized == 0U) ||
+        (position_state == PCU_POSITION_MOVING) ||
+        (position_state == PCU_POSITION_HOLDING) ||
+        (position_state == PCU_POSITION_FAULT) ||
+        (position_state == PCU_POSITION_TIMEOUT) ||
+        (pcu_speed_is_active() != 0U) ||
+        ((g_pcu_status.status & PCU_STATUS_ENABLED) != 0U))
+    {
+        return 0U;
+    }
+
+    delta_deg = initial_angle_deg - current_angle_deg;
+    if (!isfinite(delta_deg) || (delta_deg < -3600.0f) ||
+        (delta_deg > 3600.0f))
+    {
+        return 0U;
+    }
+
+    /* Keep the unwrapped target instead of re-anchoring to the wrapped
+       encoder angle. This preserves full turns between the saved point and
+       the current point, so repeating the command does not add a 360-degree
+       error after the first return. */
+    if (pcu_speed_start_position() == 0U)
+    {
+        return 0U;
+    }
+    target_angle_deg = initial_angle_deg;
+    position_state = PCU_POSITION_MOVING;
+    move_start_ms = 0U;
+    last_feedback_ms = 0U;
+    feedback_seen_during_move = 0U;
+    settle_start_ms = 0U;
+    last_command_ms = 0U;
+    position_publish(delta_deg);
+    pcu_position_speed_reference_rpm = 0.0f;
+    (void)pcu_speed_set_position_reference_rpm(0.0f);
+    return 1U;
+}
+
+uint8_t pcu_position_initial_is_set(void)
+{
+    return initial_position_valid;
 }
 
 void pcu_position_poll(uint32_t now_ms)

@@ -93,14 +93,13 @@ int main(void)
 
 	LED_Init();
 
-  uart2_init(BAUDRATE_460800);
+  uart2_init(GSA200_BAUDRATE);
   gsa200_init();
   uart3_init(BAUDRATE_921600);
   pcu_terminal_init();
   pcu_init(BAUDRATE_921600, PCU_DEFAULT_DEVICE_ID);
   pcu_position_init();
   pcu_speed_init();
-  uart7_init(BAUDRATE_921600);
   j8_uart_test_init();
 
   boot_init();               // 串口烧录：打开 UART1（必须放在 NVIC_SetPriorityGrouping 之前）
@@ -120,6 +119,8 @@ int main(void)
 		pcu_terminal_poll();
 		boot_poll();
 		j8_uart_test_poll(u32_timer_1ms);
+		/* Drain the high-rate GSA200 DMA ring again after the other service tasks. */
+		gsa200_poll(u32_timer_1ms);
 		// led 显示
 		if (u16_led_count < 1000)
 		{
@@ -203,6 +204,15 @@ static void SystemClock_Config(void)
 	while(LL_RCC_HSE_IsReady() != 1)
 	{
 	}
+
+	/* Use the accurate 64 MHz HSI clock for the high-speed USART group.
+	 * APB1 is divided down for the application and cannot generate 921600
+	 * baud closely enough with 8x oversampling. */
+	LL_RCC_HSI_Enable();
+	while (LL_RCC_HSI_IsReady() == 0U)
+	{
+	}
+	LL_RCC_SetUSARTClockSource(LL_RCC_USART234578_CLKSOURCE_HSI);
 
 	// 设置Flash存储器等待周期为4个周期，匹配480MHz主频的访问速度
 	LL_FLASH_SetLatency(LL_FLASH_LATENCY_4);
